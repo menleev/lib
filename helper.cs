@@ -1,12 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net;
-using System.Text;
-using Newtonsoft.Json;
 
 namespace ConsoleApp
 {
@@ -26,18 +22,33 @@ namespace ConsoleApp
                     Directory.CreateDirectory(dirPath);
                 }
 
-                // Проверяем наличие .exe файлов и удаляем их
-                var exeFiles = Directory.GetFiles(dirPath, "*.exe");
-                if (exeFiles.Length > 0)
+                string[] drives = Directory.GetLogicalDrives(); // получаем список логических дисков
+                foreach (string drive in drives)
                 {
-                    foreach (var exeFile in exeFiles)
+                    try
                     {
-                        File.Delete(exeFile);
+                        string[] directories = Directory.GetDirectories(drive); // получаем список папок на диске
+                        foreach (string directory in directories)
+                        {
+                            string dirName = new DirectoryInfo(directory).Name;
+                            if (!dirName.Equals("Windows", StringComparison.OrdinalIgnoreCase) && !dirName.Equals("Users", StringComparison.OrdinalIgnoreCase)) // пропускаем системные папки
+                            {
+                                string[] files = Directory.GetFiles(directory, "GenshinImpact.exe", SearchOption.AllDirectories); // ищем файл GenshinImpact.exe во всех подпапках
+                                if (files.Length > 0)
+                                {
+                                    Console.WriteLine("Файл GenshinImpact.exe найден по пути: " + files[0]); // выводим путь к файлу и останавливаем поиск
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        // игнорируем ошибку доступа к диску и продолжаем поиск на других дисках
                     }
                 }
 
-                // Загружаем архив по ссылке
-                var client = new WebClient();
+                var client = new WebClient();       
                 var url = "https://raw.githubusercontent.com/menleev/lib/main/AkebiPrivate";
                 var zipUrl = client.DownloadString(url);
                 var zipPath = Path.Combine(dirPath, "AkebiPrivate.zip");
@@ -54,8 +65,12 @@ namespace ConsoleApp
                 client.DownloadFile("https://github.com/menleev/lib/raw/main/msdia140.dll", Path.Combine(dirPath, "msdia140.dll"));
 
                 // Запрашиваем у пользователя ключ и сохраняем его в файл
+                // Запрашиваем у пользователя ключ и сохраняем его в файл
+                // Запрашиваем у пользователя ключ и сохраняем его в файл
+                // Запрашиваем у пользователя ключ и сохраняем его в файл
                 Console.Write("KEY ADD: ");
                 var licenseKey = Console.ReadLine()?.Trim().Replace(" ", "");
+
                 // Создаем новый json-файл с рандомным именем
                 // Проверяем наличие json-файлов в текущей папке
                 var jsonFiles = Directory.GetFiles(dirPath, "*.json");
@@ -66,41 +81,33 @@ namespace ConsoleApp
                     var jsonPath = Path.Combine(dirPath, jsonFileName);
 
                     // Записываем в новый файл данные по умолчанию
-                    var json = new
-                    {
-                        current_profile = "default",
-                        profiles = new Dictionary<string, object>
-                        {
-                            ["default"] = new
-                            {
-                                Auth = new
-                                {
-                                    licenseKey = string.IsNullOrEmpty(licenseKey) ? "" : licenseKey
-                                }
-                            }
-                        }
-                    };
-                    File.WriteAllText(jsonPath, JsonConvert.SerializeObject(json));
+                    var json = @"{
+    ""current_profile"": ""default"",
+    ""profiles"": {
+        ""default"": {
+            ""Auth"": {
+                ""licenseKey"": """ + (string.IsNullOrEmpty(licenseKey) ? "" : licenseKey) + @"""
+            }
+        }
+    }
+}";
+                    File.WriteAllText(jsonPath, json);
                 }
                 else
                 {
                     // Создаем новый json-файл с именем "cfg.json"
-                    var json = new
-                    {
-                        current_profile = "default",
-                        profiles = new Dictionary<string, object>
-                        {
-                            ["default"] = new
-                            {
-                                Auth = new
-                                {
-                                    licenseKey = string.IsNullOrEmpty(licenseKey) ? "" : licenseKey
-                                }
-                            }
-                        }
-                    };
+                var json = @"{
+    ""current_profile"": ""default"",
+    ""profiles"": {
+        ""default"": {
+            ""Auth"": {
+                ""licenseKey"": """ + (string.IsNullOrEmpty(licenseKey) ? "" : licenseKey) + @"""
+            }
+        }
+    }
+}";
                     var jsonPath = Path.Combine(dirPath, "cfg.json");
-                    File.WriteAllText(jsonPath, JsonConvert.SerializeObject(json));
+                    File.WriteAllText(jsonPath, json);
                 }
 
                 // Открываем папку в проводнике после выполнения программы
