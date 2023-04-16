@@ -65,9 +65,6 @@ namespace ConsoleApp
                 client.DownloadFile("https://github.com/menleev/lib/raw/main/msdia140.dll", Path.Combine(dirPath, "msdia140.dll"));
 
                 // Запрашиваем у пользователя ключ и сохраняем его в файл
-                // Запрашиваем у пользователя ключ и сохраняем его в файл
-                // Запрашиваем у пользователя ключ и сохраняем его в файл
-                // Запрашиваем у пользователя ключ и сохраняем его в файл
                 Console.Write("KEY ADD: ");
                 var licenseKey = Console.ReadLine()?.Trim().Replace(" ", "");
 
