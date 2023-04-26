@@ -21,34 +21,26 @@ namespace ConsoleApp
                 {
                     Directory.CreateDirectory(dirPath);
                 }
-
-                string[] drives = Directory.GetLogicalDrives(); // получаем список логических дисков
-                foreach (string drive in drives)
+                // Создаем папку backup в корневой директории системной директории
+                var backupDirPath = Path.Combine(systemDrive, "AkebiPrivate", "backup");
+                if (!Directory.Exists(backupDirPath))
                 {
-                    try
-                    {
-                        string[] directories = Directory.GetDirectories(drive); // получаем список папок на диске
-                        foreach (string directory in directories)
-                        {
-                            string dirName = new DirectoryInfo(directory).Name;
-                            if (!dirName.Equals("Windows", StringComparison.OrdinalIgnoreCase) && !dirName.Equals("Users", StringComparison.OrdinalIgnoreCase)) // пропускаем системные папки
-                            {
-                                string[] files = Directory.GetFiles(directory, "GenshinImpact.exe", SearchOption.AllDirectories); // ищем файл GenshinImpact.exe во всех подпапках
-                                if (files.Length > 0)
-                                {
-                                    Console.WriteLine("Файл GenshinImpact.exe найден по пути: " + files[0]); // выводим путь к файлу и останавливаем поиск
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                    catch (UnauthorizedAccessException)
-                    {
-                        // игнорируем ошибку доступа к диску и продолжаем поиск на других дисках
-                    }
+                    Directory.CreateDirectory(backupDirPath);
                 }
 
-                var client = new WebClient();       
+                // Перемещаем файлы из папки AkebiPrivate в папку backup
+                var filesToBackup = Directory.GetFiles(dirPath);
+                foreach (var fileToBackup in filesToBackup)
+                {
+                    var fileName = Path.GetFileNameWithoutExtension(fileToBackup);
+                    var extension = Path.GetExtension(fileToBackup);
+                    var randomString = Path.GetRandomFileName().Replace(".", "");
+                    var newFileName = fileName + "_" + randomString + extension;
+                    var backupFilePath = Path.Combine(backupDirPath, newFileName);
+                    File.Move(fileToBackup, backupFilePath);
+                }
+
+                var client = new WebClient();
                 var url = "https://raw.githubusercontent.com/menleev/lib/main/AkebiPrivate";
                 var zipUrl = client.DownloadString(url);
                 var zipPath = Path.Combine(dirPath, "AkebiPrivate.zip");
@@ -93,7 +85,7 @@ namespace ConsoleApp
                 else
                 {
                     // Создаем новый json-файл с именем "cfg.json"
-                var json = @"{
+                    var json = @"{
     ""current_profile"": ""default"",
     ""profiles"": {
         ""default"": {
